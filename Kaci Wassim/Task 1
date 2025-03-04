@@ -1,0 +1,23 @@
+void setup() {
+    Serial.begin(115200);
+    pinMode(LED_PIN, OUTPUT);
+    digitalWrite(LED_PIN, HIGH);  // Ensure LED starts OFF
+    Serial.println("Type 'v' to turn ON the LED, 'd' to turn OFF");
+}
+
+void loop() {
+    if (Serial.available()) {
+        String input = Serial.readStringUntil('\n');  // Read full command
+        input.trim();  // Remove any extra spaces/newlines
+        
+        if (input == "v") {
+            digitalWrite(LED_PIN, LOW);  // LED ON
+            Serial.println("LED ON");
+        } else if (input == "d") {
+            digitalWrite(LED_PIN, HIGH); // LED OFF
+            Serial.println("LED OFF");
+        } else {
+            Serial.println("Invalid command! Use 'v' or 'd'.");
+        }
+    }
+}
