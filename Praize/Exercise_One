@@ -1,0 +1,23 @@
+void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  if (Serial.available() > 0)  {
+    char Input = Serial.read();
+
+    if (Input == 'A') {
+      digitalWrite(LED_BUILTIN, HIGH);
+      }
+
+    else if (Input == 'U') {
+      digitalWrite(LED_BUILTIN, LOW);
+      }
+
+    else {
+      Serial.println("Waiting for Input");
+      }
+    }
+  delay(2000);
+}
