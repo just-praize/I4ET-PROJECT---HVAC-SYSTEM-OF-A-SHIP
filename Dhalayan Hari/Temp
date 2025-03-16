@@ -1,0 +1,36 @@
+#include <DHTesp.h>
+
+DHTesp dht;
+
+void setup() {
+    Serial.begin(9600);
+    dht.setup(D1, DHTesp::DHT11);  // Use GPIO5 (D1) or change to GPIO4 (D2)
+}
+
+void loop() {
+    delay(3000);
+
+    float temperature = dht.getTemperature();
+    if (isnan(temperature)) {
+        Serial.println("⚠️ Failed to read temperature!");
+        return;
+    }
+
+    Serial.print("🌡️ Temperature: ");
+    Serial.print(temperature);
+    Serial.println(" °C");
+
+    if (temperature > 25) {
+        Serial.println("🚀 Activate Cooling!");
+    } else {
+        float humidity = dht.getHumidity();
+        if (isnan(humidity)) {
+            Serial.println("⚠️ Failed to read humidity!");
+            return;
+        }
+
+        Serial.print("💧 Humidity: ");
+        Serial.print(humidity);
+        Serial.println(" %");
+    }
+}
