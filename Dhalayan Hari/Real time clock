@@ -1,0 +1,58 @@
+#include <Wire.h>
+#include <RTClib.h>
+
+RTC_DS1307 rtc;
+
+#define BUTTON_PIN D3  // Push button for manual override
+#define HVAC_PIN D4    // HVAC control (for example, a relay)
+
+bool manualOverride = false;
+
+void setup() {
+    Serial.begin(9600);
+    Wire.begin();
+    
+    pinMode(BUTTON_PIN, INPUT_PULLUP);  // Button as input with internal pull-up
+    pinMode(HVAC_PIN, OUTPUT);          // HVAC control pin
+
+    if (!rtc.begin()) {
+        Serial.println("⚠️ DS1307 not found! Check wiring.");
+        while (1);
+    }
+
+    if (!rtc.isrunning()) {
+        Serial.println("⚠️ RTC is NOT running! Setting time...");
+        rtc.adjust(DateTime(__DATE__, __TIME__));  // Set RTC to compile time
+    }
+}
+
+void loop() {
+    DateTime now = rtc.now();
+    int hour = now.hour();
+    
+    Serial.print("Time: ");
+    Serial.print(hour);
+    Serial.println(":00");
+
+    if (hour >= 20 || hour < 6) {  // Nighttime (8 PM - 6 AM)
+        Serial.println("🌙 Nighttime detected! Reducing HVAC activity.");
+        digitalWrite(HVAC_PIN, LOW);  // Turn off HVAC
+    } 
+    else {  // Daytime
+        if (digitalRead(BUTTON_PIN) == LOW) {  // Button pressed
+            Serial.println("🔴 Manual override activated!");
+            manualOverride = true;
+        }
+
+        if (manualOverride) {
+            Serial.println("⚙️ Overriding automatic settings.");
+            digitalWrite(HVAC_PIN, HIGH);  // Keep HVAC on
+        } 
+        else {
+            Serial.println("☀️ Daytime, normal HVAC operation.");
+            digitalWrite(HVAC_PIN, HIGH);  // HVAC ON
+        }
+    }
+
+    delay(2000);  // Wait before next check
+}
