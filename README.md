@@ -67,7 +67,18 @@ The diagram below offers a clear and accurate representation of the key componen
    - **Delay** 5 s
 
 ## 🔧 WIRING AND SCHEMATIC
-...to be gotten from Fritzing...
+<div align="center">
+  <img src="https://drive.google.com/uc?export=download&id=1P42qf2cHBNUQQzMkL7WLdpFppDT91BOX" alt="Project Wiring"/>
+  <p><strong></strong> Wiring diagram of the HVAC system</p>
+</div>
+
+<br/>
+
+<div align="center">
+  <img src="https://drive.google.com/uc?export=download&id=1_1VugGr0SF2_nVfZqP1FCs67FGAofiqy" alt="Project Schematic"/>
+  <p><strong></strong> Schematic layout of the system architecture</p>
+</div>
+
 
 ## ✨ FEATURES
 - **Autonomous Decision Making**  
