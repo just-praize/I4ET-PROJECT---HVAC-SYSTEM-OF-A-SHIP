@@ -1,0 +1,117 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract HVACManagement {
+    address public owner;
+    address public paymentReceiver;
+    address public maintenanceProvider;
+    
+    // Fuel rates (ETH per hour)
+    uint256 public constant HEATER_RATE = 0.0002 ether;
+    uint256 public constant AC_RATE = 0.0003 ether;
+    uint256 public constant FAN_RATE = 0.0001 ether;
+    
+    // Maintenance thresholds
+    uint256 public constant RUNTIME_THRESHOLD_HOURS = 1000;
+    uint256 public constant TEMP_THRESHOLD = 50;
+    uint256 public constant MAINTENANCE_FEE = 0.01 ether;
+    
+    // System state
+    bool public heaterOn;
+    bool public fanOn;
+    bool public acOn;
+    uint256 public totalRuntimeHours;
+    bool public needsMaintenance;
+    string public maintenanceReason;
+    uint256 public lastMaintenanceTimestamp; // ⬅️ New field for timestamp
+    
+    // Events
+    event MaintenanceRequested(string reason);
+    event MaintenanceCompleted(address maintainer, uint256 timestamp); // ⬅️ Updated event
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    modifier onlyMaintainer() {
+        require(msg.sender == maintenanceProvider, "Not authorized");
+        _;
+    }
+
+    constructor(address _paymentReceiver, address _maintenanceProvider) {
+        owner = msg.sender;
+        paymentReceiver = _paymentReceiver;
+        maintenanceProvider = _maintenanceProvider;
+    }
+
+    function setEquipment(bool _heater, bool _fan, bool _ac) external onlyOwner {
+        require(!needsMaintenance, "Maintenance required");
+        heaterOn = _heater;
+        fanOn = _fan;
+        acOn = _ac;
+    }
+
+    function runSystem(uint256 durationHours, uint256 currentTemp) external payable onlyOwner {
+        require(durationHours > 0, "Invalid duration");
+        require(!needsMaintenance, "Maintenance required");
+
+        uint256 fuelCost = estimateCost(durationHours);
+        uint256 totalCost = fuelCost;
+
+        if (currentTemp > TEMP_THRESHOLD || totalRuntimeHours + durationHours >= RUNTIME_THRESHOLD_HOURS) {
+            totalCost += MAINTENANCE_FEE;
+        }
+
+        require(msg.value >= totalCost, "Insufficient payment");
+
+        if (fuelCost > 0) {
+            (bool sentFuel, ) = payable(paymentReceiver).call{value: fuelCost}("");
+            require(sentFuel, "Fuel payment failed");
+        }
+
+        totalRuntimeHours += durationHours;
+
+        if (currentTemp > TEMP_THRESHOLD) {
+            _requestMaintenance("Temperature exceeded 50C");
+        } else if (totalRuntimeHours >= RUNTIME_THRESHOLD_HOURS) {
+            _requestMaintenance("Runtime reached 1000 hours");
+        }
+    }
+
+    function estimateCost(uint256 durationHours) public view returns (uint256) {
+        uint256 cost;
+        if (heaterOn) cost += HEATER_RATE * durationHours;
+        if (fanOn) cost += FAN_RATE * durationHours;
+        if (acOn) cost += AC_RATE * durationHours;
+        return cost;
+    }
+
+    function _requestMaintenance(string memory reason) private {
+        needsMaintenance = true;
+        maintenanceReason = reason;
+        emit MaintenanceRequested(reason);
+    }
+
+    function completeMaintenance() external onlyMaintainer {
+        require(needsMaintenance, "No pending maintenance");
+        require(address(this).balance >= MAINTENANCE_FEE, "Insufficient contract balance");
+
+        (bool sent, ) = payable(maintenanceProvider).call{value: MAINTENANCE_FEE}("");
+        require(sent, "Maintenance payment failed");
+
+        needsMaintenance = false;
+        totalRuntimeHours = 0;
+        maintenanceReason = "";
+        lastMaintenanceTimestamp = block.timestamp; // ⬅️ Set current timestamp
+        emit MaintenanceCompleted(msg.sender, lastMaintenanceTimestamp);
+    }
+
+    function getStatus() external view returns (bool, bool, bool) {
+        return (heaterOn, fanOn, acOn);
+    }
+
+    function getContractBalance() external view returns (uint256) {
+        return address(this).balance;
+    }
+}
