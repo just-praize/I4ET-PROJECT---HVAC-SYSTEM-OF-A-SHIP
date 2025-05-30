@@ -38,7 +38,7 @@ This system controls a compartment’s climate by:
   
 ## 🔄 SYSTEM FLOWCHART
 The diagram below offers a clear and accurate representation of the key components, data flow, and interactions within the system.
-![ICPS Project Flowchart](https://drive.google.com/uc?export=view&id=1xr49en2aMgVQj5CqvhNXhS6kqXTkhjwu)
+![ICPS Project Flowchart](https://drive.google.com/uc?export=view&id=1jOXXs0kYWvXmC_hXgF6uxQEYDSkiDJr-)
  
 ## 🏗️ SOFTWARE ARCHITECTURE
 ### LIBRARIES & MODULES
