@@ -1,0 +1,205 @@
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
+#include <DHT.h>
+#include <NewPingESP8266.h>
+#include <Wire.h>
+#include "RTClib.h"
+
+// Wi-Fi & MQTT Settings
+const char *SSID = "Ghost";
+const char *PASSWORD = "55556666";
+const char *MQTT_SERVER = "test.mosquitto.org";
+const int MQTT_PORT = 1883;
+const char *MQTT_PUB_TOPIC = "I4ET/HVACsensordata";
+
+WiFiClient espClient;
+PubSubClient Client(espClient);
+
+// Sensors & RTC
+#define DHTPIN D1
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+
+#define TRIGGER_PIN D2
+#define ECHO_PIN D3
+#define MAX_DISTANCE 200
+NewPingESP8266 sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+
+#define CO2_PIN A0
+RTC_DS3231 rtc;
+
+// Traffic-Light R–Y–G, CO₂ Alert & Buzzer
+#define YELLOWPIN D6 // AC indicator
+#define GREENPIN D7  // Fan indicator
+#define REDPIN D5    // Heater indicator
+#define CO2_ALERT_LED D4
+#define BUZZER_PIN D8
+
+void setSystemLEDs(bool ac, bool fan, bool heater)
+{
+    analogWrite(YELLOWPIN, ac ? 255 : 0);
+    analogWrite(GREENPIN, fan ? 255 : 0);
+    analogWrite(REDPIN, heater ? 255 : 0);
+}
+
+void setup_wifi()
+{
+    WiFi.begin(SSID, PASSWORD);
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(500);
+    }
+}
+
+void reconnect_mqtt()
+{
+    while (!Client.connected())
+    {
+        if (Client.connect("I4ETHVACsensordata"))
+        {
+            // connected
+        }
+        else
+        {
+            delay(5000);
+        }
+    }
+}
+
+void setup()
+{
+    Serial.begin(115200);
+    dht.begin();
+    rtc.begin();
+
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+
+    // pin modes
+    pinMode(TRIGGER_PIN, OUTPUT);
+    pinMode(ECHO_PIN, INPUT);
+    pinMode(CO2_PIN, INPUT);
+
+    pinMode(YELLOWPIN, OUTPUT);
+    pinMode(GREENPIN, OUTPUT);
+    pinMode(REDPIN, OUTPUT);
+    pinMode(CO2_ALERT_LED, OUTPUT);
+    pinMode(BUZZER_PIN, OUTPUT);
+
+    // Wi-Fi + MQTT
+    setup_wifi();
+    Client.setServer(MQTT_SERVER, MQTT_PORT);
+}
+
+void loop()
+{
+    if (!Client.connected())
+        reconnect_mqtt();
+    Client.loop();
+
+    // 1. Read sensors
+    float temperature = dht.readTemperature();
+    float humidity = dht.readHumidity();
+    unsigned int distance = sonar.ping_cm();
+    bool occupied = (distance > 0 && distance < MAX_DISTANCE);
+
+    // 2. HVAC logic → LEDs only
+    bool ac = false,
+         heater = false,
+         fan = false;
+
+    if (temperature > 25.0 && humidity > 65.0)
+    {
+        ac = true;
+        fan = true;
+        analogWrite(REDPIN, 0);
+        analogWrite(GREENPIN, 0);
+        analogWrite(YELLOWPIN, 255);
+    }
+    else if (temperature < 16.0 && humidity < 45.0)
+    {
+        heater = true;
+        analogWrite(REDPIN, 255);
+        analogWrite(GREENPIN, 0);
+        analogWrite(YELLOWPIN, 0);
+    }
+    else if (temperature > 25.0 && humidity < 45.0)
+    {
+        ac = true;
+        analogWrite(REDPIN, 0);
+        analogWrite(GREENPIN, 0);
+        analogWrite(YELLOWPIN, 255);
+    }
+    else if (temperature < 16.0 && humidity > 65.0)
+    {
+        heater = true;
+        fan = true;
+        analogWrite(REDPIN, 255);
+        analogWrite(GREENPIN, 0);
+        analogWrite(YELLOWPIN, 0);
+    }
+    else if (temperature > 25.0)
+    {
+        ac = true;
+        analogWrite(REDPIN, 0);
+        analogWrite(GREENPIN, 0);
+        analogWrite(YELLOWPIN, 255);
+    }
+    else if (temperature < 16.0)
+    {
+        heater = true;
+        analogWrite(REDPIN, 255);
+        analogWrite(GREENPIN, 0);
+        analogWrite(YELLOWPIN, 0);
+    }
+    else
+    {
+        fan = true;
+        analogWrite(REDPIN, 0);
+        analogWrite(GREENPIN, 255);
+        analogWrite(YELLOWPIN, 0);
+    }
+
+    // 3. CO₂ logic (only if occupied)
+    float co2_val = 0.0;
+    bool co2_alert = false;
+    if (occupied)
+    {
+        co2_val = analogRead(CO2_PIN);
+        co2_alert = (co2_val > 900);
+        digitalWrite(BUZZER_PIN, co2_alert ? HIGH : LOW);
+        digitalWrite(CO2_ALERT_LED, co2_alert ? HIGH : LOW);
+    }
+    else
+    {
+        digitalWrite(BUZZER_PIN, LOW);
+        digitalWrite(CO2_ALERT_LED, LOW);
+    }
+
+    // 4. Update traffic R–Y–G LEDs
+    setSystemLEDs(ac, fan, heater);
+
+    // 5. Timestamp & payload
+    DateTime now = rtc.now();
+    char ts[25];
+    snprintf(ts, sizeof(ts),
+             "%04d-%02d-%02d %02d:%02d:%02d",
+             now.year(), now.month(), now.day(),
+             now.hour(), now.minute(), now.second());
+
+    String payload = "{";
+    payload += "\"timestamp\":\"" + String(ts) + "\",";
+    payload += "\"temperature\":" + String(temperature, 1) + ",";
+    payload += "\"humidity\":" + String(humidity, 1) + ",";
+    payload += "\"occupied\":" + String(occupied ? "true" : "false") + ",";
+    payload += "\"co2_level\":" + String(co2_val, 1) + ",";
+    payload += "\"co2_alert\":" + String(co2_alert ? "true" : "false") + ",";
+    payload += "\"ac\":" + String(ac ? "true" : "false") + ",";
+    payload += "\"fan\":" + String(fan ? "true" : "false") + ",";
+    payload += "\"heater\":" + String(heater ? "true" : "false");
+    payload += "}";
+
+    Client.publish(MQTT_PUB_TOPIC, payload.c_str());
+    Serial.println("Published: " + payload);
+
+    delay(5000);
+}
