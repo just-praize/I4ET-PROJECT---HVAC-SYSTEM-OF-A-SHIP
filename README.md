@@ -92,3 +92,16 @@ The diagram below offers a clear and accurate representation of the key componen
 - **Real-Time Clock (RTC)**  
   Timestamped data for accurate historical records.
 
+## 📹 Demo Videos
+
+Below are high-speed overviews so you can see the system come together—and then in action.
+
+1. **Coupling the HVAC System (Time-lapse)**  
+   A sped-up walkthrough of how components are assembled and wired.  
+   ▶️ [Watch “Coupling the HVAC System”](https://drive.google.com/file/d/1R4oS7PwM0I7sic05TdVitCIvKSrlO42C/preview)
+
+2. **HVAC System in Operation (Time-lapse)**  
+   Quick demo of live sensor readings, CO₂ alerts, and MQTT monitoring.  
+   ▶️ [Watch “HVAC System in Operation”](https://drive.google.com/file/d/1WJj5vikU7LPZEp8zgA-iuqhJkx37_k3S/preview)
+
+
