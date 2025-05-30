@@ -55,12 +55,12 @@ The diagram below offers a clear and accurate representation of the key componen
    - Configure all pin modes
    - Connect to Wi-Fi & MQTT
 
-2. **Main Loop (`loop()`)** (every 5 s)
+2. **Main Loop (`loop()`)** (every 5s)
    - Read **temperature**, **humidity**, and **distance**
    - Determine **occupancy** (`distance < MAX`)
    - **HVAC Logic**: evaluate threshold conditions → AC / Heater / Fan
-   - **CO₂ Logic** (if occupied): read analog → if > 600 → buzzer + LED
-   - **Actuate** relays + RGB LEDs
+   - **CO₂ Logic** (if occupied): read analog → if > 900 → buzzer + LED
+   - **Actuate** relays + LEDs
    - **Timestamp** via DS1307
    - **Publish** all data as JSON over MQTT
    - **Delay** 5 s
