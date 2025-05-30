@@ -1,5 +1,5 @@
 ## 📚 PROJECT OVERVIEW
-The goal is to create an intelligent, cloud-connected HVAC (Heating, Ventilation, and Air Conditioning) system for ship compartments. Built around an ESP8266 NodeMCU, it monitors temperature, humidity, occupancy, and CO₂ levels to optimize comfort, safety, and energy efficiency. Data and alerts are published to an MQTT broker for real-time remote monitoring and historical logging.
+The goal is to create an intelligent, cloud-connected HVAC (Heating, Ventilation, and Air Conditioning) system for ship compartments. Built around an ESP8266 NodeMCU, it monitors temperature, humidity, occupancy, and CO₂ levels to optimize comfort and safety. Data and alerts are published to an MQTT broker for real-time remote monitoring and historical logging.
 
 ## 🛠️ SYSTEM BREAKDOWN
 This system controls a compartment’s climate by:
@@ -17,11 +17,11 @@ This system controls a compartment’s climate by:
    - If **T > 25 °C** & **RH < 45 %** → **AC**
    - If **T < 16 °C** & **RH > 65 %** → **Heater + Fan**
    - Else → **Fan only**
-   - If occupied & **CO₂ > 600 ppm** → **Buzzer + CO₂ LED**
+   - If occupied & **CO₂ > 900 ppm** → **Buzzer + CO₂ LED**
 
 3. **ACTUATING**
    - **Relays** to switch AC, Heater, and Fan
-   - **RGB LEDs** for visual status (Blue = AC, Red = Heater, Green = Fan)
+   - **LEDs** for visual status (Yellow = AC, Red = Heater, Green = Fan)
    - **Red LED + Buzzer** for high CO₂ alerts
 
 4. **PUBLISHING**
@@ -32,14 +32,13 @@ This system controls a compartment’s climate by:
 1. DHT11 Temperature & Humidity Sensor
 2. HC-SR04 Ultrasonic Sensor          
 3. MQ-135 (or MQ-7) Gas Sensor       
-4. DS3231 RTC Module  
-5. LEDs (Blue, Green, Red)          
+4. DS1307 RTC Module  
+5. LEDs (Yellow, Green, Red)          
 6. Buzzer
-7. Push Button
   
 ## 🔄 SYSTEM FLOWCHART
 The diagram below offers a clear and accurate representation of the key components, data flow, and interactions within the system.
-![ICPS Project Flowchart](https://drive.google.com/uc?export=view&id=1xr49en2aMgVQj5CqvhNXhS6kqXTkhjwu)
+![ICPS Project Flowchart](https://drive.google.com/uc?export=view&id=1jOXXs0kYWvXmC_hXgF6uxQEYDSkiDJr-)
  
 ## 🏗️ SOFTWARE ARCHITECTURE
 ### LIBRARIES & MODULES
@@ -47,7 +46,7 @@ The diagram below offers a clear and accurate representation of the key componen
 - **PubSubClient** — MQTT client  
 - **DHT** — Temperature/Humidity sensor  
 - **NewPingESP8266** — Ultrasonic sensor  
-- **RTClib** — DS3231 real-time clock
+- **RTClib** — DS1307 real-time clock
 
 ### EXECUTION FLOW
 1. **Initialization (`setup()`)**
@@ -56,13 +55,13 @@ The diagram below offers a clear and accurate representation of the key componen
    - Configure all pin modes
    - Connect to Wi-Fi & MQTT
 
-2. **Main Loop (`loop()`)** (every 5 s)
+2. **Main Loop (`loop()`)** (every 5s)
    - Read **temperature**, **humidity**, and **distance**
    - Determine **occupancy** (`distance < MAX`)
    - **HVAC Logic**: evaluate threshold conditions → AC / Heater / Fan
-   - **CO₂ Logic** (if occupied): read analog → if > 600 → buzzer + LED
-   - **Actuate** relays + RGB LEDs
-   - **Timestamp** via DS3231
+   - **CO₂ Logic** (if occupied): read analog → if > 900 → buzzer + LED
+   - **Actuate** relays + LEDs
+   - **Timestamp** via DS1307
    - **Publish** all data as JSON over MQTT
    - **Delay** 5 s
 
