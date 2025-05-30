@@ -1,5 +1,5 @@
 ## 📚 PROJECT OVERVIEW
-The goal is to create an intelligent, cloud-connected HVAC (Heating, Ventilation, and Air Conditioning) system for ship compartments. Built around an ESP8266 NodeMCU, it monitors temperature, humidity, occupancy, and CO₂ levels to optimize comfort, safety, and energy efficiency. Data and alerts are published to an MQTT broker for real-time remote monitoring and historical logging.
+The goal is to create an intelligent, cloud-connected HVAC (Heating, Ventilation, and Air Conditioning) system for ship compartments. Built around an ESP8266 NodeMCU, it monitors temperature, humidity, occupancy, and CO₂ levels to optimize comfort and safety. Data and alerts are published to an MQTT broker for real-time remote monitoring and historical logging.
 
 ## 🛠️ SYSTEM BREAKDOWN
 This system controls a compartment’s climate by:
