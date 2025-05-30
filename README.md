@@ -17,11 +17,11 @@ This system controls a compartment’s climate by:
    - If **T > 25 °C** & **RH < 45 %** → **AC**
    - If **T < 16 °C** & **RH > 65 %** → **Heater + Fan**
    - Else → **Fan only**
-   - If occupied & **CO₂ > 600 ppm** → **Buzzer + CO₂ LED**
+   - If occupied & **CO₂ > 900 ppm** → **Buzzer + CO₂ LED**
 
 3. **ACTUATING**
    - **Relays** to switch AC, Heater, and Fan
-   - **RGB LEDs** for visual status (Blue = AC, Red = Heater, Green = Fan)
+   - **LEDs** for visual status (Yellow = AC, Red = Heater, Green = Fan)
    - **Red LED + Buzzer** for high CO₂ alerts
 
 4. **PUBLISHING**
@@ -32,10 +32,9 @@ This system controls a compartment’s climate by:
 1. DHT11 Temperature & Humidity Sensor
 2. HC-SR04 Ultrasonic Sensor          
 3. MQ-135 (or MQ-7) Gas Sensor       
-4. DS3231 RTC Module  
-5. LEDs (Blue, Green, Red)          
+4. DS1307 RTC Module  
+5. LEDs (Yellow, Green, Red)          
 6. Buzzer
-7. Push Button
   
 ## 🔄 SYSTEM FLOWCHART
 The diagram below offers a clear and accurate representation of the key components, data flow, and interactions within the system.
@@ -47,7 +46,7 @@ The diagram below offers a clear and accurate representation of the key componen
 - **PubSubClient** — MQTT client  
 - **DHT** — Temperature/Humidity sensor  
 - **NewPingESP8266** — Ultrasonic sensor  
-- **RTClib** — DS3231 real-time clock
+- **RTClib** — DS1307 real-time clock
 
 ### EXECUTION FLOW
 1. **Initialization (`setup()`)**
@@ -62,7 +61,7 @@ The diagram below offers a clear and accurate representation of the key componen
    - **HVAC Logic**: evaluate threshold conditions → AC / Heater / Fan
    - **CO₂ Logic** (if occupied): read analog → if > 600 → buzzer + LED
    - **Actuate** relays + RGB LEDs
-   - **Timestamp** via DS3231
+   - **Timestamp** via DS1307
    - **Publish** all data as JSON over MQTT
    - **Delay** 5 s
 
