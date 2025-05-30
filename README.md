@@ -7,8 +7,8 @@ This system controls a compartment’s climate by:
 1. **MEASURING**
    - **Temperature** & **Humidity** (DHT11)
    - **Occupancy** (HC-SR04 ultrasonic)
-   - **CO₂ levels** (MQ-series gas sensor)
-   - **Real Time** (DS3231 RTC)
+   - **CO₂ levels** (MQ-7 gas sensor)
+   - **Real Time** (DS1307 RTC)
 
 2. **DECIDING** (onboard logic)
    - Keep **T < 25 °C** & **RH < 65 %**
